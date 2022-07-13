@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "log.h"
 #include "ntp.h"
 #include "utils.h"
 
@@ -110,20 +109,20 @@ int ntpGetTime(pspTime *psp_time_ntp) {
 
     u64 curr_tick = 0;
     if (R_FAILED(ret = sceRtcGetCurrentTick(&curr_tick))) {
-        debug("sceRtcGetCurrentTick failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceRtcGetCurrentTick() failed: 0x%08x\n", ret);
         return ret;
     }
 
     pspTime curr_psp_time;
     memset(&curr_psp_time, 0, sizeof(pspTime));
     if (R_FAILED(ret = sceRtcSetTick(&curr_psp_time, &curr_tick))) {
-        debug("sceRtcSetTick failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceRtcSetTick() failed: 0x%08x\n", ret);
         return ret;
     }
     
     time_t curr_time;
     if (R_FAILED(ret = sceRtcGetTime_t(&curr_psp_time, &curr_time))) {
-        debug("sceRtcGetTime_t failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceRtcGetTime_t() failed: 0x%08x\n", ret);
         return ret;
     }
 
@@ -137,14 +136,14 @@ int ntpGetTime(pspTime *psp_time_ntp) {
 
     int sockfd = sceNetInetSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (R_FAILED(sockfd)) {
-        debug("sceNetInetSocket failed: 0x%08x\n", sockfd);
+        snprintf(g_err_string, 64, "sceNetInetSocket() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return sockfd;
     }
 
     int err = 0;
     if ((server = sceGetHostByName(server_name, &err)) == NULL) {
-        debug("sceGetHostByName failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceGetHostByName() failed: 0x%08x\n", err);
         sceNetInetClose(sockfd);
         return err;
     }
@@ -155,19 +154,19 @@ int ntpGetTime(pspTime *psp_time_ntp) {
     serv_addr.sin_port = sceNetHtons(port);
     
     if ((ret = sceNetInetConnect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0) {
-        debug("sceNetInetConnect failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetInetConnect() failed: 0x%08x\n", err);
         sceNetInetClose(sockfd);
         return -1;
     }
 
     if ((ret = sceNetInetSend(sockfd, (char *)&packet, sizeof(ntp_packet), 0)) < 0) {
-        debug("sceNetInetSend failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetInetSend() failed: 0x%08x\n", err);
         sceNetInetClose(sockfd);
         return -1;
     }
 
     if ((ret = sceNetInetRecv(sockfd, (char *)&packet, sizeof(ntp_packet), 0)) < (int)sizeof(ntp_packet)) {
-        debug("sceNetInetRecv failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetInetRecv() failed: 0x%08x\n", err);
         sceNetInetClose(sockfd);
         return -1;
     }
@@ -178,30 +177,25 @@ int ntpGetTime(pspTime *psp_time_ntp) {
     pspTime psp_time_next;
     memset(&psp_time_next, 0, sizeof(pspTime));
     sceRtcSetTime64_t(&psp_time_next, time_next);
-    debug("Time received from server -> %04d-%02d-%02d %02d:%02d:%02d %d\n", psp_time_next.year, psp_time_next.month,
-        psp_time_next.day, psp_time_next.hour, psp_time_next.minutes, psp_time_next.seconds, psp_time_next.microseconds);
 
     u64 tick_next = 0, utc_tick = 0;
     if (R_FAILED(ret = sceRtcGetTick(&psp_time_next, &tick_next))) {
-        debug("sceRtcGetTick failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceRtcGetTick() failed: 0x%08x\n", err);
         return ret;
     }
     
     if (R_FAILED(ret = sceRtcConvertLocalTimeToUTC(&tick_next, &utc_tick))) {
-        debug("sceRtcConvertLocalTimeToUTC failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceRtcConvertLocalTimeToUTC() failed: 0x%08x\n", err);
         return ret;
     }
 
     if (R_FAILED(ret = pspRtcSetCurrentTick(&tick_next))) {
-        debug("pspRtcSetCurrentTick failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "pspRtcSetCurrentTick() failed: 0x%08x\n", err);
         return ret;
     }
     
     memset(&psp_time_next, 0, sizeof(pspTime));
     sceRtcSetTick(&psp_time_next, &tick_next);
-    debug("After localtime to UTC conversion -> %04d-%02d-%02d %02d:%02d:%02d %d\n", psp_time_next.year, psp_time_next.month,
-        psp_time_next.day, psp_time_next.hour, psp_time_next.minutes, psp_time_next.seconds, psp_time_next.microseconds);
-        
     sceNetInetClose(sockfd);
     *psp_time_ntp = psp_time_next;
     return 0;

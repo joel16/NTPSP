@@ -3,8 +3,8 @@
 #include <pspnet_apctl.h>
 #include <pspnet_inet.h>
 #include <psputility.h>
+#include <stdio.h>
 
-#include "log.h"
 #include "utils.h"
 
 int netInit(void) {
@@ -14,17 +14,17 @@ int netInit(void) {
     sceUtilityLoadNetModule(PSP_NET_MODULE_INET);
 
     if (R_FAILED(ret = sceNetInit(128 * 1024, 42, 4 * 1024, 42, 4 * 1024))) {
-        debug("sceNetInit() failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetInit() failed: 0x%08x\n", ret);
         return ret;
     }
     
     if (R_FAILED(ret = sceNetInetInit())) {
-        debug("sceNetInetInit() failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetInetInit() failed: 0x%08x\n", ret);
         return ret;
     }
     
     if (R_FAILED(ret = sceNetApctlInit(0x8000, 48))) {
-        debug("sceNetApctlInit() failed: 0x%08x\n", ret);
+        snprintf(g_err_string, 64, "sceNetApctlInit() failed: 0x%08x\n", ret);
         return ret;
     }
     
