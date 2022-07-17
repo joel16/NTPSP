@@ -183,11 +183,6 @@ int ntpGetTime(pspTime *psp_time_ntp) {
         snprintf(g_err_string, 64, "sceRtcGetTick() failed: 0x%08x\n", err);
         return ret;
     }
-    
-    if (R_FAILED(ret = sceRtcConvertLocalTimeToUTC(&tick_next, &utc_tick))) {
-        snprintf(g_err_string, 64, "sceRtcConvertLocalTimeToUTC() failed: 0x%08x\n", err);
-        return ret;
-    }
 
     if (R_FAILED(ret = pspRtcSetCurrentTick(&tick_next))) {
         snprintf(g_err_string, 64, "pspRtcSetCurrentTick() failed: 0x%08x\n", err);
