@@ -154,19 +154,19 @@ int ntpGetTime(pspTime *psp_time_ntp) {
     serv_addr.sin_port = sceNetHtons(port);
     
     if ((ret = sceNetInetConnect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0) {
-        snprintf(g_err_string, 64, "sceNetInetConnect() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceNetInetConnect() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return -1;
     }
 
     if ((ret = sceNetInetSend(sockfd, (char *)&packet, sizeof(ntp_packet), 0)) < 0) {
-        snprintf(g_err_string, 64, "sceNetInetSend() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceNetInetSend() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return -1;
     }
 
     if ((ret = sceNetInetRecv(sockfd, (char *)&packet, sizeof(ntp_packet), 0)) < (int)sizeof(ntp_packet)) {
-        snprintf(g_err_string, 64, "sceNetInetRecv() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceNetInetRecv() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return -1;
     }
@@ -180,17 +180,17 @@ int ntpGetTime(pspTime *psp_time_ntp) {
 
     u64 tick_next = 0, localtime_tick = 0;
     if (R_FAILED(ret = sceRtcGetTick(&psp_time_next, &tick_next))) {
-        snprintf(g_err_string, 64, "sceRtcGetTick() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceRtcGetTick() failed: 0x%08x\n", ret);
         return ret;
     }
 
     if (R_FAILED(ret = pspRtcSetCurrentTick(&tick_next))) {
-        snprintf(g_err_string, 64, "pspRtcSetCurrentTick() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "pspRtcSetCurrentTick() failed: 0x%08x\n", ret);
         return ret;
     }
 
     if (R_FAILED(ret = sceRtcConvertUtcToLocalTime(&tick_next, &localtime_tick))) {
-        snprintf(g_err_string, 64, "sceRtcConvertUtcToLocalTime() failed: 0x%08x\n", err);
+        snprintf(g_err_string, 64, "sceRtcConvertUtcToLocalTime() failed: 0x%08x\n", ret);
         return ret;
     }
     
