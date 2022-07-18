@@ -178,7 +178,7 @@ int ntpGetTime(pspTime *psp_time_ntp) {
     memset(&psp_time_next, 0, sizeof(pspTime));
     sceRtcSetTime64_t(&psp_time_next, time_next);
 
-    u64 tick_next = 0, utc_tick = 0;
+    u64 tick_next = 0, localtime_tick = 0;
     if (R_FAILED(ret = sceRtcGetTick(&psp_time_next, &tick_next))) {
         snprintf(g_err_string, 64, "sceRtcGetTick() failed: 0x%08x\n", err);
         return ret;
@@ -188,9 +188,14 @@ int ntpGetTime(pspTime *psp_time_ntp) {
         snprintf(g_err_string, 64, "pspRtcSetCurrentTick() failed: 0x%08x\n", err);
         return ret;
     }
+
+    if (R_FAILED(ret = sceRtcConvertUtcToLocalTime(&tick_next, &localtime_tick))) {
+        snprintf(g_err_string, 64, "sceRtcConvertUtcToLocalTime() failed: 0x%08x\n", err);
+        return ret;
+    }
     
     memset(&psp_time_next, 0, sizeof(pspTime));
-    sceRtcSetTick(&psp_time_next, &tick_next);
+    sceRtcSetTick(&psp_time_next, &localtime_tick);
     sceNetInetClose(sockfd);
     *psp_time_ntp = psp_time_next;
     return 0;

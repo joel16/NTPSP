@@ -6,3 +6,5 @@
 #define R_FAILED(res)    ((res) < 0)
 
 extern char g_err_string[64];
+
+int getSystemParamDateTimeFormat(void);

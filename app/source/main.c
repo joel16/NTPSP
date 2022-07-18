@@ -1,4 +1,5 @@
 #include <pspkernel.h>
+#include <psputility.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -45,29 +46,49 @@ int menuSelection(int selection) {
 
     switch (selection) {
         case 0:
-            if (R_FAILED(ret = netInit())) {
-                snprintf(g_message_text, 128, "Failed to initialize net modules\n%s", g_err_string);
-            }
-            else {
-                int ret = vlfGuiNetConfDialog();
-                if (ret != 0) {
-                    snprintf(g_message_text, 128, "Failed to establish connection\n 0x%08x\n", ret);
+            int button_res = vlfGuiMessageDialog(
+                "This action requires an active internet connection and will alter your system clock. Do you wish to continue?",
+                VLF_MD_TYPE_NORMAL | VLF_MD_BUTTONS_YESNO
+            );
+
+            if (button_res == 1) {
+                if (R_FAILED(ret = netInit())) {
+                    snprintf(g_message_text, 128, "Failed to initialize net modules\n%s", g_err_string);
                 }
                 else {
-                    if (R_FAILED(ret = ntpGetTime(&g_psp_time_ntp))) {
-                        snprintf(g_message_text, 128, "Failed to sync time with NTP server\n%s", g_err_string);
+                    int ret = vlfGuiNetConfDialog();
+                    if (ret != 0) {
+                        snprintf(g_message_text, 128, "Failed to establish connection\n 0x%08x\n", ret);
                     }
                     else {
-                        snprintf(g_message_text, 128, "Time received from NTP server\n%04d-%02d-%02d %02d:%02d:%02d",
-                            g_psp_time_ntp.year, g_psp_time_ntp.month, g_psp_time_ntp.day, g_psp_time_ntp.hour,
-                            g_psp_time_ntp.minutes, g_psp_time_ntp.seconds
-                        );
+                        if (R_FAILED(ret = ntpGetTime(&g_psp_time_ntp))) {
+                            snprintf(g_message_text, 128, "Failed to sync time with NTP server\n%s", g_err_string);
+                        }
+                        else {
+                            int time_format = getSystemParamDateTimeFormat();
+
+                            if (time_format == PSP_SYSTEMPARAM_TIME_FORMAT_12HR) {
+                                int hour = ((g_psp_time_ntp.hour % 12) == 0)? 12 : g_psp_time_ntp.hour % 12;
+
+                                snprintf(g_message_text, 128, "Time received from NTP server\n%04d-%02d-%02d %02d:%02d:%02d %s",
+                                    g_psp_time_ntp.year, g_psp_time_ntp.month, g_psp_time_ntp.day, hour,
+                                    g_psp_time_ntp.minutes, g_psp_time_ntp.seconds, (hour / 12)? "AM" : "PM"
+                                );
+                            }
+                            else {
+                                snprintf(g_message_text, 128, "Time received from NTP server\n%04d-%02d-%02d %02d:%02d:%02d",
+                                    g_psp_time_ntp.year, g_psp_time_ntp.month, g_psp_time_ntp.day, g_psp_time_ntp.hour,
+                                    g_psp_time_ntp.minutes, g_psp_time_ntp.seconds
+                                );
+                            }
+                        }
                     }
                 }
+                
+                vlfGuiMessageDialog(g_message_text, VLF_MD_BUTTONS_NONE);
+                netExit();
             }
 
-            vlfGuiMessageDialog(g_message_text, VLF_MD_BUTTONS_NONE);
-            netExit();
             break;
 
         case 1:
