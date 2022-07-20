@@ -78,7 +78,7 @@ static struct hostent *sceGetHostByName(const char *name, int *h_errno) {
     if (sceNetInetInetAton(name, &saddr) == 0) {
         int err;
         
-        if (sceNetResolverCreate(&rid, buf, sizeof(buf)) < 0) {
+        if (R_FAILED(sceNetResolverCreate(&rid, buf, sizeof(buf)))) {
             *h_errno = NO_RECOVERY;
             return NULL;
         }
@@ -86,7 +86,7 @@ static struct hostent *sceGetHostByName(const char *name, int *h_errno) {
         err = sceNetResolverStartNtoA(rid, name, &saddr, 2, 3);
         sceNetResolverDelete(rid);
         
-        if (err < 0) {
+        if (R_FAILED(err)) {
             *h_errno = HOST_NOT_FOUND;
             return NULL;
         }
@@ -98,7 +98,7 @@ static struct hostent *sceGetHostByName(const char *name, int *h_errno) {
     ent.h_addrtype = AF_INET;
     ent.h_length = sizeof(struct in_addr);
     ent.h_addr_list = addrlist;
-    ent.h_addr = (char *) &saddr;
+    ent.h_addr = (char *)&saddr;
     return &ent;
 }
 
@@ -153,13 +153,13 @@ int ntpGetTime(pspTime *psp_time_ntp) {
     memcpy((char *)&serv_addr.sin_addr.s_addr, (char *)server->h_addr_list[0], 4);
     serv_addr.sin_port = sceNetHtons(port);
     
-    if ((ret = sceNetInetConnect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) < 0) {
+    if (R_FAILED(ret = sceNetInetConnect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)))) {
         snprintf(g_err_string, 64, "sceNetInetConnect() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return -1;
     }
 
-    if ((ret = sceNetInetSend(sockfd, (char *)&packet, sizeof(ntp_packet), 0)) < 0) {
+    if (R_FAILED(ret = sceNetInetSend(sockfd, (char *)&packet, sizeof(ntp_packet), 0))) {
         snprintf(g_err_string, 64, "sceNetInetSend() failed: 0x%08x\n", ret);
         sceNetInetClose(sockfd);
         return -1;
