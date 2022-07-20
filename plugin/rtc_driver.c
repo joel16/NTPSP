@@ -1,6 +1,6 @@
 #include <pspsdk.h>
 
-PSP_MODULE_INFO("audio_driver", PSP_MODULE_KERNEL, 1, 3);
+PSP_MODULE_INFO("rtc_driver", PSP_MODULE_KERNEL, 1, 0);
 PSP_NO_CREATE_MAIN_THREAD();
 
 int sceRtcSetCurrentTick(u64 *tick);
