@@ -23,8 +23,9 @@ int SetupCallbacks(void) {
     }
     
     int thid = sceKernelCreateThread("NTPSP_callback_thread", CallbackThread, 0x11, 0xFA0, 0, 0);
-    if (thid >= 0)
+    if (thid >= 0) {
         sceKernelStartThread(thid, 0, 0);
+    }
         
     return thid;
 }
@@ -51,8 +52,9 @@ int start_thread(SceSize args, void *argp) {
             last_trail = i;
     }
     
-    if (last_trail >= 0)
+    if (last_trail >= 0) {
         path[last_trail] = 0;
+    }
     
     sceIoChdir(path);
     path[last_trail] = '/';
@@ -70,8 +72,9 @@ int module_start(SceSize args, void *argp) {
     SetupCallbacks();
 
     SceUID thread = sceKernelCreateThread("NTPSP_start_thread", start_thread, 0x10, 0x4000, 0, NULL);
-    if (thread < 0)
+    if (thread < 0) {
         return thread;
+    }
         
     sceKernelStartThread(thread, args, argp);
     return 0;

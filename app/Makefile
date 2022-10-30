@@ -4,15 +4,15 @@ SOURCES   := data drivers source
 CFILES    := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.c))
 SFILES    := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.S))
 CPPFILES  := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.cpp))
-FONTFILES := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.pgf))
+BMPFILES  := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.bmp))
 GFXFILES  := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.png))
 PRXFILES  := $(foreach dir, $(SOURCES), $(wildcard $(dir)/*.prx))
 
 OBJS := $(addsuffix .o,$(BINFILES)) $(CFILES:.c=.o) $(SFILES:.S=.o) $(CPPFILES:.cpp=.o) \
-        $(FONTFILES:.pgf=.o) $(GFXFILES:.png=.o) $(PRXFILES:.prx=.o)
+        $(BMPFILES:.bmp=.o) $(GFXFILES:.png=.o) $(PRXFILES:.prx=.o)
 
 VERSION_MAJOR :=  1
-VERSION_MINOR :=  0
+VERSION_MINOR :=  1
 
 INCDIR   = ../libs/ ../libs/include include
 CFLAGS   = -Os -G0 -Wall -ffast-math -Wno-narrowing -Wno-unused-variable \
@@ -34,8 +34,8 @@ PSP_EBOOT_TITLE = NTPSP v$(VERSION_MAJOR).$(VERSION_MINOR)$(VERSION_MICRO)
 PSPSDK=$(shell psp-config --pspsdk-path)
 include ./build.mak
 
-%.o: %.pgf
-	bin2o -i $< $@ $(addsuffix _pgf, $(basename $(notdir $<) ))
+%.o: %.bmp
+	bin2o -i $< $@ $(addsuffix _bmp, $(basename $(notdir $<) ))
 
 %.o: %.png
 	bin2o -i $< $@ $(addsuffix _png, $(basename $(notdir $<) ))
